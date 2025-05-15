@@ -76,8 +76,10 @@
                 <td>${user.last_name}</td>
                 <td>${user.email}</td>
                 <td>
+                    {% if request.user.is_superuser or request.user.is_staff %}
                     <a href="/user/edit/${user.id}/" class="btn btn-primary btn-sm">Edit</a>
                     <a href="/user/delete/${user.id}/" class="btn btn-danger btn-sm">Delete</a>
+                    {% endif %}
                 </td>
             `;
             userTableBody.appendChild(tr);
