@@ -4,9 +4,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Gender
 from django.contrib.auth.models import User
-from .forms import GenderForm, UserCreateForm, UserUpdateForm
+from .forms import UserCreateForm, UserUpdateForm
 
 def user_login(request):
     if request.method == 'POST':
@@ -94,39 +93,3 @@ def user_delete(request, user_id):
         user.delete()
         return redirect('user_list')
     return render(request, 'user_confirm_delete.html', {'user': user})
-
-@login_required(login_url='login')
-def gender_list(request):
-    genders = Gender.objects.all().order_by('id')
-    return render(request, 'gender_list.html', {'genders': genders})
-
-@login_required(login_url='login')
-def gender_add(request):
-    if request.method == 'POST':
-        form = GenderForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('gender_list')
-    else:
-        form = GenderForm()
-    return render(request, 'gender_form.html', {'form': form, 'title': 'Add Gender'})
-
-@login_required(login_url='login')
-def gender_edit(request, gender_id):
-    gender = get_object_or_404(Gender, pk=gender_id)
-    if request.method == 'POST':
-        form = GenderForm(request.POST, instance=gender)
-        if form.is_valid():
-            form.save()
-            return redirect('gender_list')
-    else:
-        form = GenderForm(instance=gender)
-    return render(request, 'gender_form.html', {'form': form, 'title': 'Edit Gender'})
-
-@login_required(login_url='login')
-def gender_delete(request, gender_id):
-    gender = get_object_or_404(Gender, pk=gender_id)
-    if request.method == 'POST':
-        gender.delete()
-        return redirect('gender_list')
-    return render(request, 'gender_confirm_delete.html', {'gender': gender})

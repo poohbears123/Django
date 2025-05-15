@@ -1,29 +1,21 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Gender
 
-class GenderForm(forms.ModelForm):
-    class Meta:
-        model = Gender
-        fields = ['name']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
-        }
-
-    def clean_name(self):
-        name = self.cleaned_data.get('name')
-        if not name:
-            raise ValidationError("Gender field is required.")
-        return name
+GENDER_CHOICES = [
+    ('Male', 'Male'),
+    ('Female', 'Female'),
+    ('Others', 'Others'),
+]
 
 class UserCreateForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}))
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, required=False, widget=forms.Select(attrs={'class': 'form-control'}))
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email']  # Email optional
+        fields = ['username', 'first_name', 'last_name', 'email'] 
 
     def clean(self):
         cleaned_data = super().clean()
@@ -33,7 +25,6 @@ class UserCreateForm(forms.ModelForm):
         first_name = cleaned_data.get("first_name")
         last_name = cleaned_data.get("last_name")
 
-        # Required fields validation
         if not first_name or not last_name:
             raise ValidationError("Full Name fields (First and Last) are required.")
 
@@ -56,9 +47,11 @@ class UserCreateForm(forms.ModelForm):
         return cleaned_data
 
 class UserUpdateForm(forms.ModelForm):
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, required=False, widget=forms.Select(attrs={'class': 'form-control'}))
+
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email']  # No password fields
+        fields = ['username', 'first_name', 'last_name', 'email'] 
 
     def __init__(self, *args, **kwargs):
         self.user_id = kwargs.pop('user_id', None)
