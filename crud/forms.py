@@ -51,7 +51,7 @@ class UserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email'] 
+        fields = ['username', 'first_name', 'last_name','password', 'email'] 
 
     def __init__(self, *args, **kwargs):
         self.user_id = kwargs.pop('user_id', None)
