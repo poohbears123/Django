@@ -27,8 +27,6 @@
                 <td>{{ gender.id }}</td>
                 <td>{{ gender.name }}</td>
                 <td>
-                    <a href="{% url 'gender_edit' gender.id %}" class="btn btn-primary btn-sm">Edit</a>
-                    <a href="{% url 'gender_delete' gender.id %}" class="btn btn-danger btn-sm">Delete</a>
                 </td>
             </tr>
             {% empty %}
