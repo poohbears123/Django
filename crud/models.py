@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -15,6 +14,8 @@ from django.contrib.auth.models import User
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     gender = models.ForeignKey(Gender, null=True, blank=True, on_delete=models.SET_NULL)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} Profile"
@@ -30,11 +31,6 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
-
-
-=======
 from django.db import models
 from django.contrib.auth.models import User
 
-
->>>>>>> 1b4c11a (adik)
