@@ -42,8 +42,13 @@ def user_list(request):
         users_data = []
         for user in page_obj:
             gender_name = ''
-            if hasattr(user, 'profile') and user.profile.gender:
-                gender_name = user.profile.gender.name
+            address = ''
+            date_of_birth = ''
+            if hasattr(user, 'profile'):
+                if user.profile.gender:
+                    gender_name = user.profile.gender.name
+                address = user.profile.address or ''
+                date_of_birth = user.profile.date_of_birth or ''
             users_data.append({
                 'id': user.id,
                 'username': user.username,
@@ -51,6 +56,8 @@ def user_list(request):
                 'last_name': user.last_name,
                 'email': user.email,
                 'gender': gender_name,
+                'address': address,
+                'date_of_birth': date_of_birth,
             })
         data = {
             'users': users_data,
@@ -73,11 +80,16 @@ def user_add(request):
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
             user.save()
-            # Save gender in Profile
             gender = form.cleaned_data.get('gender')
+            address = form.cleaned_data.get('address')
+            date_of_birth = form.cleaned_data.get('date_of_birth')
             if gender:
                 user.profile.gender = gender
-                user.profile.save()
+            if address:
+                user.profile.address = address
+            if date_of_birth:
+                user.profile.date_of_birth = date_of_birth
+            user.profile.save()
             return redirect('user_list')
     else:
         form = UserCreateForm()
@@ -90,24 +102,28 @@ def user_edit(request, user_id):
         form = UserUpdateForm(request.POST, instance=user, user_id=user_id)
         if form.is_valid():
             user = form.save(commit=False)
-            # Save password if provided
             password = form.cleaned_data.get('password')
             if password:
                 user.set_password(password)
             user.save()
-            # Save gender in Profile
-            gender_id = request.POST.get('gender')
-            if gender_id:
-                from .models import Gender
-                gender = Gender.objects.get(pk=gender_id)
+            gender = form.cleaned_data.get('gender')
+            address = form.cleaned_data.get('address')
+            date_of_birth = form.cleaned_data.get('date_of_birth')
+            if gender:
                 user.profile.gender = gender
-                user.profile.save()
+            else:
+                user.profile.gender = None
+            user.profile.address = address
+            user.profile.date_of_birth = date_of_birth
+            user.profile.save()
             return redirect('user_list')
     else:
-        # Prepopulate gender field in form
         initial = {}
-        if hasattr(user, 'profile') and user.profile.gender:
-            initial['gender'] = user.profile.gender
+        if hasattr(user, 'profile'):
+            if user.profile.gender:
+                initial['gender'] = user.profile.gender
+            initial['address'] = user.profile.address
+            initial['date_of_birth'] = user.profile.date_of_birth
         form = UserUpdateForm(instance=user, user_id=user_id, initial=initial)
     return render(request, 'user_form.html', {'form': form, 'title': 'Edit User'})
 
@@ -137,3 +153,55 @@ def gender_add(request):
     else:
         form = GenderForm()
     return render(request, 'gender_form.html', {'form': form, 'title': 'Add Gender'})
+
+@login_required(login_url='login')
+def gender_edit(request, gender_id):
+    gender = get_object_or_404(Gender, pk=gender_id)
+    if request.method == 'POST':
+        form = GenderForm(request.POST, instance=gender)
+        if form.is_valid():
+            form.save()
+            return redirect('gender_list')
+    else:
+        form = GenderForm(instance=gender)
+    return render(request, 'gender_form.html', {'form': form, 'title': 'Edit Gender'})
+
+@login_required(login_url='login')
+def gender_delete(request, gender_id):
+    gender = get_object_or_404(Gender, pk=gender_id)
+    if request.method == 'POST':
+        gender.delete()
+        return redirect('gender_list')
+    return render(request, 'gender_confirm_delete.html', {'gender': gender})
+
+@login_required(login_url='login')
+def user_profile_edit(request):
+    user = request.user
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, instance=user, user_id=user.id)
+        if form.is_valid():
+            user = form.save(commit=False)
+            password = form.cleaned_data.get('password')
+            if password:
+                user.set_password(password)
+            user.save()
+            gender = form.cleaned_data.get('gender')
+            address = form.cleaned_data.get('address')
+            date_of_birth = form.cleaned_data.get('date_of_birth')
+            if gender:
+                user.profile.gender = gender
+            else:
+                user.profile.gender = None
+            user.profile.address = address
+            user.profile.date_of_birth = date_of_birth
+            user.profile.save()
+            return redirect('user_list')
+    else:
+        initial = {}
+        if hasattr(user, 'profile'):
+            if user.profile.gender:
+                initial['gender'] = user.profile.gender
+            initial['address'] = user.profile.address
+            initial['date_of_birth'] = user.profile.date_of_birth
+        form = UserUpdateForm(instance=user, user_id=user.id, initial=initial)
+    return render(request, 'user_form.html', {'form': form, 'title': 'Edit Profile'})
