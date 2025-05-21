@@ -5,7 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth.models import User
-from .forms import UserCreateForm, UserUpdateForm
+from .forms import UserCreateForm, UserUpdateForm, ChangePasswordForm, AdminChangePasswordForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
 
 def user_login(request):
     if request.method == 'POST':
@@ -18,6 +21,72 @@ def user_login(request):
         else:
             return render(request, 'login.html', {'error': 'Invalid username or password'})
     return render(request, 'login.html')
+
+def admin_required(view_func):
+    decorated_view_func = user_passes_test(lambda u: u.is_superuser)(view_func)
+    return decorated_view_func
+
+@login_required(login_url='login')
+@admin_required
+def admin_change_password(request, user_id):
+    user_to_change = get_object_or_404(User, pk=user_id)
+    if request.method == 'POST':
+        form = AdminChangePasswordForm(request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data.get('new_password')
+            user_to_change.set_password(new_password)
+            user_to_change.save()
+            messages.success(request, f"Password for user {user_to_change.username} has been changed.")
+            return redirect('user_list')
+    else:
+        form = AdminChangePasswordForm()
+    return render(request, 'admin_change_password.html', {'form': form, 'user_to_change': user_to_change})
+
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == 'POST':
+        if 'confirm' in request.POST:
+            # User confirmed password change
+            form = ChangePasswordForm(request.session.get('change_password_form_data'))
+            if form.is_valid():
+                new_password = form.cleaned_data.get('new_password')
+                user = request.user
+                user.set_password(new_password)
+                user.save()
+                update_session_auth_hash(request, user)  # Important to keep the user logged in
+                # Clear session data
+                if 'change_password_form_data' in request.session:
+                    del request.session['change_password_form_data']
+                return redirect('change_password_success')
+            else:
+                # Form data invalid, redirect back to change password form
+                return redirect('change_password')
+        elif 'cancel' in request.POST:
+            # User cancelled password change
+            if 'change_password_form_data' in request.session:
+                del request.session['change_password_form_data']
+            return redirect('change_password')
+        else:
+            # Initial form submission
+            form = ChangePasswordForm(request.POST)
+            if form.is_valid():
+                old_password = form.cleaned_data.get('old_password')
+                user = request.user
+                if not user.check_password(old_password):
+                    form.add_error('old_password', 'Old password is incorrect.')
+                    return render(request, 'change_password.html', {'form': form})
+                # Save form data in session and show confirmation page
+                request.session['change_password_form_data'] = request.POST
+                return render(request, 'change_password_confirm.html', {'form': form})
+            else:
+                return render(request, 'change_password.html', {'form': form})
+    else:
+        form = ChangePasswordForm()
+    return render(request, 'change_password.html', {'form': form})
+
+@login_required(login_url='login')
+def change_password_success(request):
+    return render(request, 'change_password_success.html')
 
 def user_logout(request):
     logout(request)

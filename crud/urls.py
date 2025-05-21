@@ -14,6 +14,10 @@ urlpatterns = [
     path('gender/add/', views.gender_add, name='gender_add'),
     path('gender/edit/<int:gender_id>/', views.gender_edit, name='gender_edit'),
     path('gender/delete/<int:gender_id>/', views.gender_delete, name='gender_delete'),
+
+    path('user/change_password/', views.change_password, name='change_password'),
+    path('user/change_password/success/', views.change_password_success, name='change_password_success'),
+    path('user/admin_change_password/<int:user_id>/', views.admin_change_password, name='admin_change_password'),
 ]
 from django.urls import path  
 from . import views
