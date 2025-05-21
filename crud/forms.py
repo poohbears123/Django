@@ -46,8 +46,6 @@ class UserCreateForm(forms.ModelForm):
 
 class UserUpdateForm(forms.ModelForm):
     gender = forms.ModelChoiceField(queryset=Gender.objects.all(), required=False, widget=forms.Select(attrs={'class': 'form-control'}))
-    password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
-    confirm_password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     address = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
 
@@ -71,18 +69,9 @@ class UserUpdateForm(forms.ModelForm):
         cleaned_data = super().clean()
         first_name = cleaned_data.get("first_name")
         last_name = cleaned_data.get("last_name")
-        password = cleaned_data.get("password")
-        confirm_password = cleaned_data.get("confirm_password")
 
         if not first_name or not last_name:
             raise ValidationError("Full Name fields (First and Last) are required.")
-
-        if password or confirm_password:
-            if password != confirm_password:
-                self.add_error('password', "Password and Confirm Password do not match.")
-                self.add_error('confirm_password', "Password and Confirm Password do not match.")
-                self.cleaned_data['password'] = ''
-                self.cleaned_data['confirm_password'] = ''
 
         return cleaned_data
 
@@ -93,3 +82,57 @@ class GenderForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
         }
+
+class ChangePasswordForm(forms.Form):
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}),
+        label="Old Password"
+    )
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}),
+        label="New Password"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}),
+        label="Confirm New Password"
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if not new_password or not confirm_password:
+            self.add_error('new_password', "New Password is required.")
+            self.add_error('confirm_password', "Confirm Password is required.")
+
+        if new_password != confirm_password:
+            self.add_error('new_password', "New Password and Confirm Password do not match.")
+            self.add_error('confirm_password', "New Password and Confirm Password do not match.")
+
+        return cleaned_data
+
+class AdminChangePasswordForm(forms.Form):
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}),
+        label="New Password"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}),
+        label="Confirm New Password"
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if not new_password or not confirm_password:
+            self.add_error('new_password', "New Password is required.")
+            self.add_error('confirm_password', "Confirm Password is required.")
+
+        if new_password != confirm_password:
+            self.add_error('new_password', "New Password and Confirm Password do not match.")
+            self.add_error('confirm_password', "New Password and Confirm Password do not match.")
+
+        return cleaned_data
