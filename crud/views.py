@@ -46,7 +46,6 @@ def admin_change_password(request, user_id):
 def change_password(request):
     if request.method == 'POST':
         if 'confirm' in request.POST:
-            # User confirmed password change
             form = ChangePasswordForm(request.session.get('change_password_form_data'))
             if form.is_valid():
                 new_password = form.cleaned_data.get('new_password')
@@ -54,9 +53,9 @@ def change_password(request):
                 user.set_password(new_password)
                 user.save()
                 update_session_auth_hash(request, user)  # Important to keep the user logged in
-                # Clear session data
                 if 'change_password_form_data' in request.session:
                     del request.session['change_password_form_data']
+                messages.success(request, "Password changed successfully.")
                 return redirect('change_password_success')
             else:
                 # Form data invalid, redirect back to change password form
@@ -159,6 +158,7 @@ def user_add(request):
             if date_of_birth:
                 user.profile.date_of_birth = date_of_birth
             user.profile.save()
+            messages.success(request, "User added successfully.")
             return redirect('user_list')
     else:
         form = UserCreateForm()
@@ -185,6 +185,7 @@ def user_edit(request, user_id):
             user.profile.address = address
             user.profile.date_of_birth = date_of_birth
             user.profile.save()
+            messages.success(request, "User updated successfully.")
             return redirect('user_list')
     else:
         initial = {}
@@ -201,6 +202,7 @@ def user_delete(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     if request.method == 'POST':
         user.delete()
+        messages.success(request, "User deleted successfully.")
         return redirect('user_list')
     return render(request, 'user_confirm_delete.html', {'user': user})
 
@@ -218,7 +220,62 @@ def gender_add(request):
         form = GenderForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Gender added successfully.")
             return redirect('gender_list')
     else:
         form = GenderForm()
     return render(request, 'gender_form.html', {'form': form, 'title': 'Add Gender'})
+
+@login_required(login_url='login')
+def gender_edit(request, gender_id):
+    gender = get_object_or_404(Gender, pk=gender_id)
+    if request.method == 'POST':
+        form = GenderForm(request.POST, instance=gender)
+        if form.is_valid():
+            form.save()
+            return redirect('gender_list')
+    else:
+        form = GenderForm(instance=gender)
+    return render(request, 'gender_form.html', {'form': form, 'title': 'Edit Gender'})
+
+@login_required(login_url='login')
+def gender_delete(request, gender_id):
+    gender = get_object_or_404(Gender, pk=gender_id)
+    if request.method == 'POST':
+        gender.delete()
+        messages.success(request, "Gender deleted successfully.")
+        return redirect('gender_list')
+    return render(request, 'gender_confirm_delete.html', {'gender': gender})
+
+@login_required(login_url='login')
+def user_profile_edit(request):
+    user = request.user
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, instance=user, user_id=user.id)
+        if form.is_valid():
+            user = form.save(commit=False)
+            password = form.cleaned_data.get('password')
+            if password:
+                user.set_password(password)
+            user.save()
+            gender = form.cleaned_data.get('gender')
+            address = form.cleaned_data.get('address')
+            date_of_birth = form.cleaned_data.get('date_of_birth')
+            if gender:
+                user.profile.gender = gender
+            else:
+                user.profile.gender = None
+            user.profile.address = address
+            user.profile.date_of_birth = date_of_birth
+            user.profile.save()
+            messages.success(request, "Profile updated successfully.")
+            return redirect('user_list')
+    else:
+        initial = {}
+        if hasattr(user, 'profile'):
+            if user.profile.gender:
+                initial['gender'] = user.profile.gender
+            initial['address'] = user.profile.address
+            initial['date_of_birth'] = user.profile.date_of_birth
+        form = UserUpdateForm(instance=user, user_id=user.id, initial=initial)
+    return render(request, 'user_form.html', {'form': form, 'title': 'Edit Profile'})
