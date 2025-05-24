@@ -9,6 +9,7 @@
 <body>
 <div class="container mt-5">
     <h2>Delete User</h2>
+    {% include 'includes/messages.html' %}
     <p>Are you sure you want to delete user <strong>{{ user.username }}</strong>?</p>
     <form method="post">
         {% csrf_token %}
