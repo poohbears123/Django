@@ -9,6 +9,7 @@
 <body>
 <div class="container mt-5">
     <h2>{{ title }}</h2>
+    {% include 'includes/messages.html' %}
     <form method="post" novalidate>
         {% csrf_token %}
         <div class="mb-3">
