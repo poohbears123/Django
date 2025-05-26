@@ -1,3 +1,4 @@
+{% load static %}
 {% if messages %}
     {% for message in messages %}
         {% if not message_tag or message_tag in message.tags %}
@@ -8,3 +9,5 @@
         {% endif %}
     {% endfor %}
 {% endif %}
+
+<script src="{% static 'js/auto-close.js' %}"></script>

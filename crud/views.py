@@ -1,25 +1,62 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
-from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth.models import User
-from .forms import UserCreateForm, UserUpdateForm, ChangePasswordForm, AdminChangePasswordForm
+from .forms import UserCreateForm, UserUpdateForm, ChangePasswordForm, AdminChangePasswordForm, ResetPasswordForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
+from django.urls import reverse
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 def user_login(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('user_list')
-        else:
-            return render(request, 'login.html', {'error': 'Invalid username or password'})
+        form_type = request.POST.get('form_type')
+        if form_type == 'login':
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('user_list')
+            else:
+                login_url = reverse('login')
+                redirect_url = f"{login_url}?error=1"
+                return HttpResponseRedirect(redirect_url)
+        elif form_type == 'forgot_password':
+            form = ResetPasswordForm(request.POST)
+            if form.is_valid():
+                username = form.cleaned_data['username']
+                try:
+                    user = User.objects.get(username=username)
+                    token_generator = PasswordResetTokenGenerator()
+                    token = token_generator.make_token(user)
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                    reset_url = request.build_absolute_uri(
+                        reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+                    )
+                    subject = "Password Reset Requested"
+                    message = render_to_string('login_password_reset_email.html', {
+                        'user': user,
+                        'reset_url': reset_url,
+                    })
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+                    messages.success(request, "Password reset instructions have been sent to the email address associated with the account.")
+                    return redirect('login')
+                except User.DoesNotExist:
+                    messages.error(request, "No user found with this username.")
+                    return redirect('login')
+            else:
+                messages.error(request, "Invalid input for password reset.")
+                return redirect('login')
     return render(request, 'login.html')
 
 def admin_required(view_func):
@@ -151,12 +188,15 @@ def user_add(request):
             gender = form.cleaned_data.get('gender')
             address = form.cleaned_data.get('address')
             date_of_birth = form.cleaned_data.get('date_of_birth')
+            phone_number = form.cleaned_data.get('phone_number')
             if gender:
                 user.profile.gender = gender
             if address:
                 user.profile.address = address
             if date_of_birth:
                 user.profile.date_of_birth = date_of_birth
+            if phone_number is not None:
+                user.profile.phone_number = phone_number
             user.profile.save()
             messages.success(request, "User added successfully.")
             return redirect('user_list')
@@ -178,12 +218,15 @@ def user_edit(request, user_id):
             gender = form.cleaned_data.get('gender')
             address = form.cleaned_data.get('address')
             date_of_birth = form.cleaned_data.get('date_of_birth')
+            phone_number = form.cleaned_data.get('phone_number')
             if gender:
                 user.profile.gender = gender
             else:
                 user.profile.gender = None
             user.profile.address = address
             user.profile.date_of_birth = date_of_birth
+            if phone_number is not None:
+                user.profile.phone_number = phone_number
             user.profile.save()
             messages.success(request, "User updated successfully.")
             return redirect('user_list')
@@ -194,6 +237,7 @@ def user_edit(request, user_id):
                 initial['gender'] = user.profile.gender
             initial['address'] = user.profile.address
             initial['date_of_birth'] = user.profile.date_of_birth
+            initial['phone_number'] = user.profile.phone_number
         form = UserUpdateForm(instance=user, user_id=user_id, initial=initial)
     return render(request, 'user_form.html', {'form': form, 'title': 'Edit User'})
 

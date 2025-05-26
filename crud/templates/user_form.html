@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ title }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        .required-label::after {
+            content: " *";
+            color: red;
+        }
+        .form-help-text {
+            font-size: 0.875em;
+            color: #6c757d;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -12,21 +22,128 @@
         {% include 'includes/messages.html' with message_tag='user' %}
         <form method="post" novalidate>
             {% csrf_token %}
-            {% for field in form %}
-                <div class="mb-3">
-                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{% if field.field.required %}*{% endif %}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <div class="text-danger">
-                            {% for error in field.errors %}
-                                <div>{{ error }}</div>
-                            {% endfor %}
-                        </div>
+            <div class="card p-4 shadow-sm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.username.id_for_label }}" class="form-label {% if form.username.field.required %}required-label{% endif %}">{{ form.username.label }}</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.username.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="form-help-text">Username must be unique.</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.email.id_for_label }}" class="form-label {% if form.email.field.required %}required-label{% endif %}">{{ form.email.label }}</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.email.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.first_name.id_for_label }}" class="form-label {% if form.first_name.field.required %}required-label{% endif %}">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.first_name.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.last_name.id_for_label }}" class="form-label {% if form.last_name.field.required %}required-label{% endif %}">{{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.last_name.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if form.password %}
+                    <div class="col-md-6">
+                        <label for="{{ form.password.id_for_label }}" class="form-label {% if form.password.field.required %}required-label{% endif %}">{{ form.password.label }}</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.password.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.confirm_password.id_for_label }}" class="form-label {% if form.confirm_password.field.required %}required-label{% endif %}">{{ form.confirm_password.label }}</label>
+                        {{ form.confirm_password }}
+                        {% if form.confirm_password.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.confirm_password.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                     {% endif %}
+                    <div class="col-md-6">
+                        <label for="{{ form.gender.id_for_label }}" class="form-label {% if form.gender.field.required %}required-label{% endif %}">{{ form.gender.label }}</label>
+                        {{ form.gender }}
+                        {% if form.gender.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.gender.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.address.id_for_label }}" class="form-label {% if form.address.field.required %}required-label{% endif %}">{{ form.address.label }}</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.address.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.date_of_birth.id_for_label }}" class="form-label {% if form.date_of_birth.field.required %}required-label{% endif %}">{{ form.date_of_birth.label }}</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.date_of_birth.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.phone_number.id_for_label }}" class="form-label {% if form.phone_number.field.required %}required-label{% endif %}">{{ form.phone_number.label }}</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.phone_number.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary">Submit</button>
-            <a href="{% url 'user_list' %}" class="btn btn-secondary">Back</a>
+                <div class="mt-4 d-flex justify-content-start">
+                    <button type="submit" class="btn btn-primary me-2">Submit</button>
+                    <a href="{% url 'user_list' %}" class="btn btn-secondary">Back</a>
+                </div>
+            </div>
         </form>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
