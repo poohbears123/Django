@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -31,3 +32,9 @@ def save_user_profile(sender, instance, **kwargs):
         Profile.objects.create(user=instance)
 
 
+=======
+from django.db import models
+from django.contrib.auth.models import User
+
+
+>>>>>>> 1b4c11a (adik)
