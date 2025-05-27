@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>User List</title>
@@ -65,37 +66,37 @@
         });
     }
 
-        function renderUsers(users) {
-            userTableBody.innerHTML = '';
-            if (users.length === 0) {
-                userTableBody.innerHTML = '<tr><td colspan="7" class="text-center">No users found.</td></tr>';
-                return;
-            }
-            users.forEach(user => {
-                const tr = document.createElement('tr');
-                let actions = '';
-                if (user.id === parseInt("{{ request.user.id }}") || {{ request.user.is_superuser|yesno:"true,false" }} || {{ request.user.is_staff|yesno:"true,false" }}) {
-                    actions = `
-                        <a href="/user/edit/${user.id}/" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="/user/delete/${user.id}/" class="btn btn-danger btn-sm">Delete</a>
-                    `;
-                    if ({{ request.user.is_superuser|yesno:"true,false" }}) {
-                        actions += `
-                            <a href="/user/admin_change_password/${user.id}/" class="btn btn-warning btn-sm ms-1">Change Password</a>
-                        `;
-                    }
-                }
-                tr.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${user.username}</td>
-                    <td>${user.first_name}</td>
-                    <td>${user.last_name}</td>
-                    <td>${user.email}</td>
-                    <td>${actions}</td>
-                `;
-                userTableBody.appendChild(tr);
-            });
+    function renderUsers(users) {
+        userTableBody.innerHTML = '';
+        if (users.length === 0) {
+            userTableBody.innerHTML = '<tr><td colspan="7" class="text-center">No users found.</td></tr>';
+            return;
         }
+        users.forEach(user => {
+            const tr = document.createElement('tr');
+            let actions = '';
+            if (user.id === parseInt("{{ request.user.id }}") || {{ request.user.is_superuser|yesno:"true,false" }} || {{ request.user.is_staff|yesno:"true,false" }}) {
+                actions = `
+                    <a href="/user/edit/${user.id}/" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="/user/delete/${user.id}/" class="btn btn-danger btn-sm">Delete</a>
+                `;
+                if ({{ request.user.is_superuser|yesno:"true,false" }}) {
+                    actions += `
+                        <a href="/user/admin_change_password/${user.id}/" class="btn btn-warning btn-sm ms-1">Change Password</a>
+                    `;
+                }
+            }
+            tr.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.username}</td>
+                <td>${user.first_name}</td>
+                <td>${user.last_name}</td>
+                <td>${user.email}</td>
+                <td>${actions}</td>
+            `;
+            userTableBody.appendChild(tr);
+        });
+    }
 
     function renderPagination(data) {
         pagination.innerHTML = '';
@@ -140,5 +141,6 @@
 
     fetchUsers();
 </script>
+<script src="{% static 'js/popupWindow.js' %}"></script>
 </body>
 </html>

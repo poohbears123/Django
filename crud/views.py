@@ -199,7 +199,13 @@ def user_add(request):
                 user.profile.phone_number = phone_number
             user.profile.save()
             messages.success(request, "User added successfully.")
-            return redirect('user_list')
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+            else:
+                return redirect('user_list')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'user_form.html', {'form': form, 'title': 'Add User'})
     else:
         form = UserCreateForm()
     return render(request, 'user_form.html', {'form': form, 'title': 'Add User'})
@@ -229,7 +235,13 @@ def user_edit(request, user_id):
                 user.profile.phone_number = phone_number
             user.profile.save()
             messages.success(request, "User updated successfully.")
-            return redirect('user_list')
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+            else:
+                return redirect('user_list')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'user_form.html', {'form': form, 'title': 'Edit User'})
     else:
         initial = {}
         if hasattr(user, 'profile'):
