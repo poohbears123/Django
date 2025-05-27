@@ -16,7 +16,10 @@ class Profile(models.Model):
     gender = models.ForeignKey(Gender, null=True, blank=True, on_delete=models.SET_NULL)
     address = models.CharField(max_length=255, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
+<<<<<<< HEAD
     phone_number = models.IntegerField(blank=True, null=True)
+=======
+>>>>>>> 71d1fb13d48aaf79d0e5659720e6598b097a629b
 
     def __str__(self):
         return f"{self.user.username} Profile"
@@ -32,6 +35,9 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
+<<<<<<< HEAD
 from django.db import models
 from django.contrib.auth.models import User
 
+=======
+>>>>>>> 71d1fb13d48aaf79d0e5659720e6598b097a629b

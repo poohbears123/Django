@@ -3,13 +3,20 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from .models import Gender, Profile
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 71d1fb13d48aaf79d0e5659720e6598b097a629b
 class UserCreateForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True}))
     gender = forms.ModelChoiceField(queryset=Gender.objects.all(), required=False, widget=forms.Select(attrs={'class': 'form-control'}))
     address = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
+<<<<<<< HEAD
     phone_number = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+=======
+>>>>>>> 71d1fb13d48aaf79d0e5659720e6598b097a629b
 
     class Meta:
         model = User
@@ -48,7 +55,10 @@ class UserUpdateForm(forms.ModelForm):
     gender = forms.ModelChoiceField(queryset=Gender.objects.all(), required=False, widget=forms.Select(attrs={'class': 'form-control'}))
     address = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     date_of_birth = forms.DateField(required=False, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
+<<<<<<< HEAD
     phone_number = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+=======
+>>>>>>> 71d1fb13d48aaf79d0e5659720e6598b097a629b
 
     class Meta:
         model = User
@@ -137,6 +147,7 @@ class AdminChangePasswordForm(forms.Form):
             self.add_error('confirm_password', "New Password and Confirm Password do not match.")
 
         return cleaned_data
+<<<<<<< HEAD
 
 class ResetPasswordForm(forms.Form):
     username_or_email = forms.CharField(
@@ -149,3 +160,5 @@ class ResetPasswordForm(forms.Form):
         if not User.objects.filter(username=data).exists() and not User.objects.filter(email=data).exists():
             raise ValidationError("No user found with this username or email.")
         return data
+=======
+>>>>>>> 71d1fb13d48aaf79d0e5659720e6598b097a629b
