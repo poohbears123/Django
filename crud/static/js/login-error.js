@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', function() {
         loginError.classList.remove('hidden');
         loginError.style.display = 'block';
 
+        if (window.history.replaceState) {
+            const url = new URL(window.location);
+            url.searchParams.delete('error');
+            window.history.replaceState({}, document.title, url.toString());
+        }
+
         // Clear errors on input
         function clearError() {
             usernameInput.style.borderColor = '';

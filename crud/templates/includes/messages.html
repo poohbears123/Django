@@ -1,13 +1,4 @@
-{% if messages %}
-    {% for message in messages %}
-        {% if not message_tag or message_tag in message.tags %}
-        <div class="alert alert-success alert-dismissible" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endif %}
-    {% endfor %}
-{% endif %}
+
 {% load static %}
 {% if messages %}
     {% for message in messages %}

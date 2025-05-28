@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth.models import User
-from .forms import UserCreateForm, UserUpdateForm, ChangePasswordForm, AdminChangePasswordForm, ResetPasswordForm
+from .models import Gender
+from .forms import UserCreateForm, UserUpdateForm, ChangePasswordForm, AdminChangePasswordForm, ResetPasswordForm, GenderForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
@@ -34,9 +35,15 @@ def user_login(request):
         elif form_type == 'forgot_password':
             form = ResetPasswordForm(request.POST)
             if form.is_valid():
-                username = form.cleaned_data['username']
+                username = form.cleaned_data['username_or_email']
                 try:
                     user = User.objects.get(username=username)
+                except User.DoesNotExist:
+                    try:
+                        user = User.objects.get(email=username)
+                    except User.DoesNotExist:
+                        user = None
+                if user:
                     token_generator = PasswordResetTokenGenerator()
                     token = token_generator.make_token(user)
                     uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -51,8 +58,8 @@ def user_login(request):
                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
                     messages.success(request, "Password reset instructions have been sent to the email address associated with the account.")
                     return redirect('login')
-                except User.DoesNotExist:
-                    messages.error(request, "No user found with this username.")
+                else:
+                    messages.error(request, "No user found with this username or email.")
                     return redirect('login')
             else:
                 messages.error(request, "Invalid input for password reset.")
@@ -73,7 +80,7 @@ def admin_change_password(request, user_id):
             new_password = form.cleaned_data.get('new_password')
             user_to_change.set_password(new_password)
             user_to_change.save()
-            messages.success(request, f"Password for user {user_to_change.username} has been changed.")
+            # Removed success message to avoid showing after password change
             return redirect('user_list')
     else:
         form = AdminChangePasswordForm()
@@ -128,6 +135,25 @@ def user_logout(request):
     logout(request)
     return redirect('login')
 
+def _update_user_profile(user, form):
+    password = form.cleaned_data.get('password')
+    if password:
+        user.set_password(password)
+    user.save()
+    gender = form.cleaned_data.get('gender')
+    address = form.cleaned_data.get('address')
+    date_of_birth = form.cleaned_data.get('date_of_birth')
+    phone_number = form.cleaned_data.get('phone_number')
+    if gender:
+        user.profile.gender = gender
+    else:
+        user.profile.gender = None
+    user.profile.address = address
+    user.profile.date_of_birth = date_of_birth
+    if phone_number is not None:
+        user.profile.phone_number = phone_number
+    user.profile.save()
+
 @login_required(login_url='login')
 def user_list(request):
     search_query = request.GET.get('search', '')
@@ -180,31 +206,27 @@ def user_list(request):
 @login_required(login_url='login')
 def user_add(request):
     if request.method == 'POST':
-        form = UserCreateForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-            gender = form.cleaned_data.get('gender')
-            address = form.cleaned_data.get('address')
-            date_of_birth = form.cleaned_data.get('date_of_birth')
-            phone_number = form.cleaned_data.get('phone_number')
-            if gender:
-                user.profile.gender = gender
-            if address:
-                user.profile.address = address
-            if date_of_birth:
-                user.profile.date_of_birth = date_of_birth
-            if phone_number is not None:
-                user.profile.phone_number = phone_number
-            user.profile.save()
-            messages.success(request, "User added successfully.")
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            form = UserCreateForm(request.POST)
+            if form.is_valid():
+                user = form.save(commit=False)
+                user.set_password(form.cleaned_data['password'])
+                user.save()
+                _update_user_profile(user, form)
                 return JsonResponse({'success': True})
             else:
-                return redirect('user_list')
+                html = render(request, 'user_form.html', {'form': form, 'title': 'Add User'}).content.decode('utf-8')
+                return JsonResponse({'success': False, 'html': html})
         else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            form = UserCreateForm(request.POST)
+            if form.is_valid():
+                user = form.save(commit=False)
+                user.set_password(form.cleaned_data['password'])
+                user.save()
+                _update_user_profile(user, form)
+                messages.success(request, "User added successfully.")
+                return redirect('user_list')
+            else:
                 return render(request, 'user_form.html', {'form': form, 'title': 'Add User'})
     else:
         form = UserCreateForm()
@@ -214,33 +236,25 @@ def user_add(request):
 def user_edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     if request.method == 'POST':
-        form = UserUpdateForm(request.POST, instance=user, user_id=user_id)
-        if form.is_valid():
-            user = form.save(commit=False)
-            password = form.cleaned_data.get('password')
-            if password:
-                user.set_password(password)
-            user.save()
-            gender = form.cleaned_data.get('gender')
-            address = form.cleaned_data.get('address')
-            date_of_birth = form.cleaned_data.get('date_of_birth')
-            phone_number = form.cleaned_data.get('phone_number')
-            if gender:
-                user.profile.gender = gender
-            else:
-                user.profile.gender = None
-            user.profile.address = address
-            user.profile.date_of_birth = date_of_birth
-            if phone_number is not None:
-                user.profile.phone_number = phone_number
-            user.profile.save()
-            messages.success(request, "User updated successfully.")
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            form = UserUpdateForm(request.POST, instance=user, user_id=user_id)
+            if form.is_valid():
+                user = form.save(commit=False)
+                user.email = form.cleaned_data.get('email')
+                _update_user_profile(user, form)
                 return JsonResponse({'success': True})
             else:
-                return redirect('user_list')
+                html = render(request, 'user_form.html', {'form': form, 'title': 'Edit User'}).content.decode('utf-8')
+                return JsonResponse({'success': False, 'html': html})
         else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            form = UserUpdateForm(request.POST, instance=user, user_id=user_id)
+            if form.is_valid():
+                user = form.save(commit=False)
+                user.email = form.cleaned_data.get('email')
+                _update_user_profile(user, form)
+                messages.success(request, "User updated successfully.")
+                return redirect('user_list')
+            else:
                 return render(request, 'user_form.html', {'form': form, 'title': 'Edit User'})
     else:
         initial = {}
@@ -261,9 +275,6 @@ def user_delete(request, user_id):
         messages.success(request, "User deleted successfully.")
         return redirect('user_list')
     return render(request, 'user_confirm_delete.html', {'user': user})
-
-from .models import Gender
-from .forms import GenderForm
 
 @login_required(login_url='login')
 def gender_list(request):
@@ -309,21 +320,7 @@ def user_profile_edit(request):
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, instance=user, user_id=user.id)
         if form.is_valid():
-            user = form.save(commit=False)
-            password = form.cleaned_data.get('password')
-            if password:
-                user.set_password(password)
-            user.save()
-            gender = form.cleaned_data.get('gender')
-            address = form.cleaned_data.get('address')
-            date_of_birth = form.cleaned_data.get('date_of_birth')
-            if gender:
-                user.profile.gender = gender
-            else:
-                user.profile.gender = None
-            user.profile.address = address
-            user.profile.date_of_birth = date_of_birth
-            user.profile.save()
+            _update_user_profile(user, form)
             messages.success(request, "Profile updated successfully.")
             return redirect('user_list')
     else:
