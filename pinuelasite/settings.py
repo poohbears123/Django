@@ -76,13 +76,17 @@ WSGI_APPLICATION = 'pinuelasite.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'group7',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    #'mysql': {
+     #   'ENGINE': 'django.db.backends.mysql',
+      #  'NAME': 'group7',
+       # 'USER': 'root',
+        #'PASSWORD': '',
+        #'HOST': 'localhost',
+        #'PORT': '3306',
+    #}
 }
 
 
